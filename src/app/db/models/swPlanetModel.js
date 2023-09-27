@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
         'swPlanet',{
             id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
             name: DataTypes.STRING,
-            gravity: DataTypes.FLOAT,
+            gravity: DataTypes.STRING,
         }, 
         {
             paranoid: true

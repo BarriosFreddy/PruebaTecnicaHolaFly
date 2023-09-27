@@ -1,3 +1,4 @@
+const  PeopleService  = require("../../app/db/services/peopleService");
 
 const _isWookieeFormat = (req) => {
     if(req.query.format && req.query.format == 'wookiee'){
@@ -15,7 +16,10 @@ const applySwapiEndpoints = (server, app) => {
     });
 
     server.get('/hfswapi/getPeople/:id', async (req, res) => {
-        res.sendStatus(501);
+        const { id } =  req.params
+        if(Number.isNaN(+id) || +id < 0) return res.status(400).send({ message: "The ID must be a valid number"})
+        const people = await PeopleService.getInstance().findById(id);
+        res.status(200).send(people)
     });
 
     server.get('/hfswapi/getPlanet/:id', async (req, res) => {

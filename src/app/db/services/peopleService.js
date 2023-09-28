@@ -10,21 +10,23 @@ class PeopleService {
     return this.peopleServiceInstance;
   }
 
-  async findById(id) {
+  async findById(id, isWookiee = false) {
     let person = await db.swPeople.findOne({
       where: {
         id,
       },
     });
-    if (!person) {
+    if (isWookiee || !person) {
       console.log("Retrieving data from external source...");
       person = await genericRequest(
-        "https://swapi.dev/api/people/" + id,
+        `https://swapi.dev/api/people/${id}${
+          isWookiee ? "?format=wookiee" : ""
+        }`,
         "GET",
         null,
         false
       );
-      if (person) db.swPeople.create(person);
+      if (person && !isWookiee) db.swPeople.create(person);
     }
     return person;
   }

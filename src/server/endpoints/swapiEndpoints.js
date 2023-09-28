@@ -1,3 +1,6 @@
+const { peopleFactory } = require("../../app/People");
+const AbstractPeople = require("../../app/People/abstractPeople");
+const Planet = require("../../app/Planet/Planet");
 const PeopleService = require("../../app/db/services/peopleService");
 const PlanetService = require("../../app/db/services/planetService");
 
@@ -22,15 +25,16 @@ const applySwapiEndpoints = (server, app) => {
     const { id } = req.params;
     if (Number.isNaN(+id) || +id < 0)
       return res.status(400).send({ message: "The ID must be a valid number" });
-    const people = await PeopleService.getInstance().findById(id);
+    let people = await peopleFactory(id, req.query.format);
     res.status(200).send(people);
   });
   server.get("/hfswapi/getPlanet/:id", async (req, res) => {
     const { id } = req.params;
     if (Number.isNaN(+id) || +id < 0)
       return res.status(400).send({ message: "The ID must be a valid number" });
-    const planet = await PlanetService.getInstance().findById(id);
-    res.status(200).send(planet);
+    let planet = new Planet(id);
+    const planetResult = await planet.init();
+    res.status(200).send(planetResult);
   });
   server.get("/hfswapi/getWeightOnPlanetRandom", (req, res) =>
     getWeightOnPlanetRandom(app, req, res)
@@ -43,12 +47,19 @@ const applySwapiEndpoints = (server, app) => {
 
 module.exports = applySwapiEndpoints;
 
+/**
+ * Calculates the weight on a different planet
+ * @param {*} app
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
 async function getWeightOnPlanetRandom(app, req, res) {
   const { personId, planetId } = req.query;
   if (!personId)
     return res.status(400).send("You're missing the personId value");
   if (!planetId)
-    return res.status(400).send("You're missing the personId value");
+    return res.status(400).send("You're missing the planetId value");
   const personPlanetData = await Promise.all([
     PeopleService.getInstance().findById(personId),
     PlanetService.getInstance().findById(planetId),
@@ -74,7 +85,7 @@ async function getWeightOnPlanetRandom(app, req, res) {
     return res
       .status(404)
       .send({ message: "Planet not found", error: planetErrorDetail });
-  if (homeworld.match(/(.*)(planets\/)(\d{0,})(.*)/)[3] === planetId)
+  if (homeworld.match(AbstractPeople.PLANET_ID_REGEX)[3] === planetId)
     return res.status(400).send({
       error: "It's not allowed to calculate the weight in the home world",
     });

@@ -1,17 +1,28 @@
+const PlanetService = require("../db/services/planetService");
+
 class Planet {
-    constructor(id){
-        throw new Error('To be implemented');
-    }
+  constructor(id) {
+    this.id = id;
+  }
 
-    async init(){
-        throw new Error('To be implemented');
+  async init() {
+    const { detail, name, gravity } =
+      (await PlanetService.getInstance().findById(this.id)) || {};
+    if (!detail) {
+      this.name = name;
+      this.gravity = gravity;
+      return this;
     }
+    return null;
+  }
 
-    getName() {
-        return this.name;
-    }
+  getName() {
+    return this.name;
+  }
 
-    getGravity() {
-        return this.gravity;
-    }
+  getGravity() {
+    return this.gravity;
+  }
 }
+
+module.exports = Planet;
